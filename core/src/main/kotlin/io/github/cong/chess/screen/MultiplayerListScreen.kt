@@ -13,6 +13,7 @@ import io.github.cong.chess.Vars
 import io.github.cong.chess.Vars.game
 import io.github.cong.chess.Vars.skin
 import io.github.cong.chess.Vars.stage
+import kotlinx.coroutines.delay
 
 class MultiplayerListScreen(val rooms: List<String>) : Screen {
 
@@ -44,7 +45,7 @@ class MultiplayerListScreen(val rooms: List<String>) : Screen {
                 val startButton = TextButton("房间:$room", skin)
                 startButton.addListener(object : ClickListener() {
                     override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                        Net.sendBlocking("start:$room")
+                        game.setScreen(MutliplayerGameScreen(room))
                     }
                 })
                 table.add(startButton).width(200f).height(50f).padBottom(20f)
@@ -63,10 +64,12 @@ class MultiplayerListScreen(val rooms: List<String>) : Screen {
         newButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent?, x: Float, y: Float) {
                 val message = Net.sendBlocking("new")
+                Thread.sleep(20)
                 println(message)
-                if (message == "createSuccess") {
-                    val myName = Vars.preferences.getString("name")
-                    game.setScreen(MutliplayerGameScreen(myName))
+                if (message!!.startsWith("createSuccess: ")) {
+                    val roomName = message.removePrefix("createSuccess: ").trim()
+                    println(roomName)
+                    game.setScreen(MutliplayerGameScreen(roomName))
                 }
             }
         })

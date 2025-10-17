@@ -12,21 +12,22 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.ScreenUtils
 import io.github.cong.chess.Net
+import io.github.cong.chess.Net.needSync
 import io.github.cong.chess.Vars.camera
 import io.github.cong.chess.Vars.game
 import io.github.cong.chess.Vars.skin
 import io.github.cong.chess.Vars.stage
 import io.github.cong.chess.server.Chess
+import io.github.cong.chess.server.boardSize
 import io.github.cong.chess.server.deserializeChess
 import kotlin.math.floor
 import kotlin.math.min
 
 
-class MutliplayerGameScreen(val roomName: String) : Screen {
+class MutliplayerGameScreen(roomName: String) : Screen {
 
     private lateinit var shapeRenderer: ShapeRenderer
 
-    private val boardSize = 15
     // 以下为运行时计算：cellSize, offsetX, offsetY 会在 create/resize 时计算
     private var cellSize = 0f
     private var offsetX = 0f
@@ -76,6 +77,10 @@ class MutliplayerGameScreen(val roomName: String) : Screen {
 
         drawBoard()
         handleInput()
+        if (needSync) {
+            chess = deserializeChess(Net.sendBlocking("update")!!)
+            needSync = false
+        }
     }
 
     private fun drawBoard() {
@@ -116,12 +121,6 @@ class MutliplayerGameScreen(val roomName: String) : Screen {
 
     private fun handleInput() {
         if (Gdx.input.justTouched() && !gameOver) {
-
-            if (currentPlayer == -1) {
-                chess = deserializeChess(Net.sendBlocking("update")!!)
-                return
-            }
-
             // 把屏幕坐标转换为世界坐标（相机坐标系）
             val v = Vector3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f)
             camera.unproject(v)
@@ -133,11 +132,11 @@ class MutliplayerGameScreen(val roomName: String) : Screen {
             val row = floor((worldY - offsetY + cellSize / 2f) / cellSize).toInt()
 
             if (row in 0 until boardSize && col in 0 until boardSize && chess.get(row, col) == 0) {
-                if (Net.sendBlocking("place: $row $col") == "success") {
-                    chess = deserializeChess(Net.sendBlocking("update")!!)
-                }
-                if (checkWin(row, col, currentPlayer)) {
-                    val msg = if (currentPlayer == 1) "玩家(黑棋)胜利!" else "白棋胜利!"
+                val result = Net.sendBlocking("place: $row $col")
+                if (result == "done") {
+                    //will wait for sync
+                } else if (result!!.startsWith("message: ")) {
+                    val msg = result.removePrefix("message: ")
                     showEndDialog(msg)
                     gameOver = true
                 }
@@ -149,7 +148,7 @@ class MutliplayerGameScreen(val roomName: String) : Screen {
         Gdx.input.inputProcessor = stage
         val dialog = Dialog("游戏结束", skin)
         dialog.text(message).contentTable.pad(20f).align(Align.center)
-
+/*
         val againButton = TextButton("再来一局", skin)
         againButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent?, x: Float, y: Float) {
@@ -157,12 +156,13 @@ class MutliplayerGameScreen(val roomName: String) : Screen {
                 dialog.hide()
             }
         })
-        dialog.add(againButton).width(200f).height(50f)
+        dialog.add(againButton).width(200f).height(50f)*/
 
-        val exitButton = TextButton("退出游戏", skin)
+        val exitButton = TextButton("回到多人游戏列表", skin)
         exitButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                game.setScreen(MainMenuScreen())
+                Net.disconnect()
+                Net.connect()
                 dialog.hide()
             }
         })
@@ -170,32 +170,6 @@ class MutliplayerGameScreen(val roomName: String) : Screen {
 
         dialog.show(stage)
         stage.addActor(dialog)
-    }
-
-    private fun checkWin(row: Int, col: Int, player: Int): Boolean {
-        val dirs = arrayOf(
-            intArrayOf(1, 0),  // 横
-            intArrayOf(0, 1),  // 竖
-            intArrayOf(1, 1),  // 右下
-            intArrayOf(1, -1)  // 右上
-        )
-        for (dir in dirs) {
-            var count = 1
-            for (i in 1..4) {
-                val r = row + i * dir[0]
-                val c = col + i * dir[1]
-                if (r !in 0 until boardSize || c !in 0 until boardSize || chess.get(r, c) != player) break
-                count++
-            }
-            for (i in 1..4) {
-                val r = row - i * dir[0]
-                val c = col - i * dir[1]
-                if (r !in 0 until boardSize || c !in 0 until boardSize || chess.get(r, c) != player) break
-                count++
-            }
-            if (count >= 5) return true
-        }
-        return false
     }
 
     override fun resize(width: Int, height: Int) {

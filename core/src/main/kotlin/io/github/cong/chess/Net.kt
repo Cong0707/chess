@@ -1,5 +1,6 @@
 package io.github.cong.chess
 
+import io.github.cong.chess.Net.needSync
 import io.github.cong.chess.Vars.game
 import io.github.cong.chess.screen.MultiplayerListScreen
 import io.netty.bootstrap.Bootstrap
@@ -19,6 +20,7 @@ object Net {
     lateinit var group: EventLoopGroup
     lateinit var bootstrap: Bootstrap
     lateinit var channel: Channel
+    var needSync = false
 
     // 当前等待响应的 future（每次调用 sendBlocking 会新建一个）
     @Volatile
@@ -44,6 +46,7 @@ object Net {
                     })
 
                 channel = bootstrap.connect("127.0.0.1", 6777).sync().channel()
+                //channel = bootstrap.connect("new.xem8k5.top", 6777).sync().channel()
 
                 channel.closeFuture().sync()
             } finally {
@@ -79,37 +82,39 @@ object Net {
     internal fun handleResponse(msg: String) {
         currentFuture?.complete(msg)
     }
-}
 
-class GameClientHandler : SimpleChannelInboundHandler<ByteBuf>() {
-    override fun channelActive(ctx: ChannelHandlerContext) {
-        // 连接成功后，发送一个“登录”包
-        val message = "player: ${Vars.preferences.getString("name")}"
-        ctx.writeAndFlush(Unpooled.copiedBuffer(message, CharsetUtil.UTF_8))
-    }
-
-    override fun channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf) {
-        val message = msg.toString(CharsetUtil.UTF_8)
-        println("client received: $message")
-
-        // 将收到的数据传给阻塞函数
-        Net.handleResponse(message)
-
-        if (message.startsWith("rooms: ")) {
-            val rooms = message
-                .removePrefix("rooms: ")
-                .removePrefix("[")
-                .removeSuffix("]")
-                .split(",")
-                .map { it.trim() }
-            println(rooms)
-            game.setScreen(MultiplayerListScreen(rooms))
+    class GameClientHandler : SimpleChannelInboundHandler<ByteBuf>() {
+        override fun channelActive(ctx: ChannelHandlerContext) {
+            // 连接成功后，发送一个“登录”包
+            val message = "player: ${Vars.preferences.getString("name")}"
+            ctx.writeAndFlush(Unpooled.copiedBuffer(message, CharsetUtil.UTF_8))
         }
-    }
 
-    @Deprecated("Deprecated in Java")
-    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-        cause.printStackTrace()
-        ctx.close()
+        override fun channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf) {
+            val message = msg.toString(CharsetUtil.UTF_8)
+            println("client received: $message")
+
+            if (message.startsWith("rooms: ")) {
+                val rooms = message
+                    .removePrefix("rooms: ")
+                    .removePrefix("[")
+                    .removeSuffix("]")
+                    .split(",")
+                    .map { it.trim() }
+                println(rooms)
+                game.setScreen(MultiplayerListScreen(rooms))
+            }else if (message.startsWith("sync")) {
+                needSync = true
+            }else {
+                // 将收到的数据传给阻塞函数
+                handleResponse(message)
+            }
+        }
+
+        @Deprecated("Deprecated in Java")
+        override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+            cause.printStackTrace()
+            ctx.close()
+        }
     }
 }
