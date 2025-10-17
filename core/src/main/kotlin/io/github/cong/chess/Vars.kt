@@ -7,15 +7,15 @@ import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.BitmapFont
-import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.utils.viewport.FitViewport
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.util.concurrent.*
+import java.util.concurrent.atomic.AtomicInteger
+
 
 object Vars {
     lateinit var game: Game
@@ -23,11 +23,29 @@ object Vars {
     lateinit var skin: Skin
     lateinit var font: BitmapFont
     lateinit var camera: Camera
-    lateinit var threadPool: ExecutorService
+    lateinit var threadPool: ThreadPoolExecutor
     lateinit var preferences: Preferences
 
     fun init(){
-        threadPool = Executors.newFixedThreadPool(4)
+        val maxThreads = Int.MAX_VALUE//Runtime.getRuntime().availableProcessors()
+        val isCachedPool = maxThreads == Int.MAX_VALUE
+        threadPool = ThreadPoolExecutor(
+            if (isCachedPool) 0 else maxThreads,
+            maxThreads,
+            60L,
+            TimeUnit.SECONDS,
+            if (isCachedPool) SynchronousQueue() else LinkedBlockingQueue(),
+            object : ThreadFactory {
+                var threadID: AtomicInteger = AtomicInteger()
+
+                override fun newThread(r: Runnable): Thread {
+                    val thread = Thread(r, "NetThread" + threadID.getAndIncrement())
+                    thread.isDaemon = true
+                    return thread
+                }
+            })
+        threadPool.allowCoreThreadTimeOut(!isCachedPool)
+
         stage = Stage(FitViewport(960f, 540f))
         skin = Skin(Gdx.files.internal("ui/uiskin.json"))
         camera = OrthographicCamera()

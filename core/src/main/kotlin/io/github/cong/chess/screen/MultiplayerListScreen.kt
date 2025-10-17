@@ -89,7 +89,6 @@ class MultiplayerListScreen(val rooms: List<String>) : Screen {
             exitButton.addListener(object : ClickListener() {
                 override fun clicked(event: InputEvent?, x: Float, y: Float) {
                     Net.disconnect()
-                    Vars.threadPool.shutdownNow()
                     Gdx.app.exit()
                 }
             })
