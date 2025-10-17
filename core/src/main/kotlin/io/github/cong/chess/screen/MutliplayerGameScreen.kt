@@ -72,15 +72,16 @@ class MutliplayerGameScreen(roomName: String) : Screen {
     override fun render(delta: Float) {
         ScreenUtils.clear(0.95f, 0.9f, 0.8f, 1f)
 
-        camera.update()
-        shapeRenderer.projectionMatrix = camera.combined
-
-        drawBoard()
         handleInput()
+
         if (needSync) {
             chess = deserializeChess(Net.sendBlocking("update")!!)
             needSync = false
         }
+
+        camera.update()
+        shapeRenderer.projectionMatrix = camera.combined
+        drawBoard()
     }
 
     private fun drawBoard() {
@@ -148,15 +149,6 @@ class MutliplayerGameScreen(roomName: String) : Screen {
         Gdx.input.inputProcessor = stage
         val dialog = Dialog("游戏结束", skin)
         dialog.text(message).contentTable.pad(20f).align(Align.center)
-/*
-        val againButton = TextButton("再来一局", skin)
-        againButton.addListener(object : ClickListener() {
-            override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                game.setScreen(GameScreen())
-                dialog.hide()
-            }
-        })
-        dialog.add(againButton).width(200f).height(50f)*/
 
         val exitButton = TextButton("回到多人游戏列表", skin)
         exitButton.addListener(object : ClickListener() {

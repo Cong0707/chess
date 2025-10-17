@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.ScreenUtils
+import io.github.cong.chess.Net
 import io.github.cong.chess.Vars.camera
 import io.github.cong.chess.Vars.game
 import io.github.cong.chess.Vars.skin
@@ -151,6 +152,7 @@ class GameScreen: Screen {
         val exitButton = TextButton("退出游戏", skin)
         exitButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                Net.disconnect()
                 game.setScreen(MainMenuScreen())
                 dialog.hide()
             }
