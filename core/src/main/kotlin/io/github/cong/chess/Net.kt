@@ -45,8 +45,8 @@ object Net {
                         }
                     })
 
-                channel = bootstrap.connect("127.0.0.1", 6777).sync().channel()
-                //channel = bootstrap.connect("new.xem8k5.top", 6777).sync().channel()
+                //channel = bootstrap.connect("127.0.0.1", 6777).sync().channel()
+                channel = bootstrap.connect("new.xem8k5.top", 6777).sync().channel()
 
                 channel.closeFuture().sync()
             } finally {
@@ -101,6 +101,7 @@ object Net {
                     .removeSuffix("]")
                     .split(",")
                     .map { it.trim() }
+                    .filter { it.isNotBlank() }
                 println(rooms)
                 game.setScreen(MultiplayerListScreen(rooms))
             }else if (message.startsWith("sync")) {

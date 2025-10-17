@@ -33,14 +33,19 @@ class MultiplayerListScreen(val rooms: List<String>) : Screen {
 
         // 标题
         val titleLabel = Label("多人游戏", skin)
+        println("title")
         table.add(titleLabel).padBottom(80f)
 
+        println("row")
         table.row()
 
         var i = 0
 
+        println("if")
         if (rooms.size >= 1) {
+            println("if true")
             for (room in rooms) {
+                println("for $room")
                 // 开始按钮
                 val startButton = TextButton("房间:$room", skin)
                 startButton.addListener(object : ClickListener() {
@@ -49,14 +54,16 @@ class MultiplayerListScreen(val rooms: List<String>) : Screen {
                     }
                 })
                 table.add(startButton).width(200f).height(50f).padBottom(20f)
+                println("startButton")
                 i++
                 if (i >= 3) {
+                    println("row")
                     table.row()
                     i = 0
                 }
             }
 
-            if(i != 0) table.row()
+            if(i != 0) println("row");table.row()
         }
 
         // 新建房间

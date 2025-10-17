@@ -180,7 +180,6 @@ class MutliplayerGameScreen(roomName: String) : Screen {
     override fun resume() {}
     override fun hide() {
         println("GameScreen hide")
-        shapeRenderer.dispose()
         this.dispose()
     }
     override fun dispose() {}
