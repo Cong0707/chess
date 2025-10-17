@@ -2,7 +2,7 @@ package io.github.cong.chess.lwjgl3
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
-import io.github.cong.chess.Chess
+import io.github.cong.chess.ChessGame
 import io.github.cong.chess.lwjgl3.StartupHelper.Companion.startNewJvmIfRequired
 
 /** Launches the desktop (LWJGL3) application.  */
@@ -15,7 +15,7 @@ object Lwjgl3Launcher {
     }
 
     private fun createApplication(): Lwjgl3Application {
-        return Lwjgl3Application(Chess(), defaultConfiguration)
+        return Lwjgl3Application(ChessGame(), defaultConfiguration)
     }
 
     private val defaultConfiguration: Lwjgl3ApplicationConfiguration

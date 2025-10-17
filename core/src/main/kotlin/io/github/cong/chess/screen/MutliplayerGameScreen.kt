@@ -1,6 +1,5 @@
 package io.github.cong.chess.screen
 
-import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.Color
@@ -12,15 +11,18 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.ScreenUtils
+import io.github.cong.chess.Net
 import io.github.cong.chess.Vars.camera
 import io.github.cong.chess.Vars.game
 import io.github.cong.chess.Vars.skin
 import io.github.cong.chess.Vars.stage
+import io.github.cong.chess.server.Chess
+import io.github.cong.chess.server.deserializeChess
 import kotlin.math.floor
 import kotlin.math.min
 
 
-class GameScreen: Screen {
+class MutliplayerGameScreen(val roomName: String) : Screen {
 
     private lateinit var shapeRenderer: ShapeRenderer
 
@@ -31,14 +33,16 @@ class GameScreen: Screen {
     private var offsetY = 0f
 
     // 棋盘状态：0=空，1=黑，2=白
-    private val board = Array(boardSize) { IntArray(boardSize) }
+    private var chess: Chess
 
-    private var currentPlayer = 1 // 玩家执黑棋
+    private var currentPlayer: Int
 
     private var gameOver = false
 
     init {
         recalcLayout()
+        currentPlayer = Net.sendBlocking("join: $roomName")!!.toInt()
+        chess = deserializeChess(Net.sendBlocking("update")!!)
     }
 
     private fun recalcLayout() {
@@ -91,7 +95,7 @@ class GameScreen: Screen {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
         for (r in 0 until boardSize) {
             for (c in 0 until boardSize) {
-                when (board[r][c]) {
+                when (chess.get(r, c)) {
                     1 -> {
                         shapeRenderer.color = Color.BLACK
                         val cx = offsetX + c * cellSize
@@ -112,6 +116,12 @@ class GameScreen: Screen {
 
     private fun handleInput() {
         if (Gdx.input.justTouched() && !gameOver) {
+
+            if (currentPlayer == -1) {
+                chess = deserializeChess(Net.sendBlocking("update")!!)
+                return
+            }
+
             // 把屏幕坐标转换为世界坐标（相机坐标系）
             val v = Vector3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f)
             camera.unproject(v)
@@ -122,14 +132,15 @@ class GameScreen: Screen {
             val col = floor((worldX - offsetX + cellSize / 2f) / cellSize).toInt()
             val row = floor((worldY - offsetY + cellSize / 2f) / cellSize).toInt()
 
-            if (row in 0 until boardSize && col in 0 until boardSize && board[row][col] == 0) {
-                board[row][col] = currentPlayer
+            if (row in 0 until boardSize && col in 0 until boardSize && chess.get(row, col) == 0) {
+                if (Net.sendBlocking("place: $row $col") == "success") {
+                    chess = deserializeChess(Net.sendBlocking("update")!!)
+                }
                 if (checkWin(row, col, currentPlayer)) {
                     val msg = if (currentPlayer == 1) "玩家(黑棋)胜利!" else "白棋胜利!"
                     showEndDialog(msg)
                     gameOver = true
                 }
-                currentPlayer = if (currentPlayer == 1) 2 else 1
             }
         }
     }
@@ -173,13 +184,13 @@ class GameScreen: Screen {
             for (i in 1..4) {
                 val r = row + i * dir[0]
                 val c = col + i * dir[1]
-                if (r !in 0 until boardSize || c !in 0 until boardSize || board[r][c] != player) break
+                if (r !in 0 until boardSize || c !in 0 until boardSize || chess.get(r, c) != player) break
                 count++
             }
             for (i in 1..4) {
                 val r = row - i * dir[0]
                 val c = col - i * dir[1]
-                if (r !in 0 until boardSize || c !in 0 until boardSize || board[r][c] != player) break
+                if (r !in 0 until boardSize || c !in 0 until boardSize || chess.get(r, c) != player) break
                 count++
             }
             if (count >= 5) return true

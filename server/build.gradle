@@ -14,7 +14,7 @@ application.setMainClass(mainClassName)
 eclipse.project.name = appName + '-server'
 
 dependencies {
-
+  implementation 'io.netty:netty-all:4.1.112.Final'
 }
 
 jar {

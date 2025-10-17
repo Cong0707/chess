@@ -6,23 +6,24 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.ScreenUtils
 import io.github.cong.chess.Vars.camera
-import io.github.cong.chess.screen.MainMenuScreen
 import io.github.cong.chess.Vars.skin
 import io.github.cong.chess.Vars.stage
+import io.github.cong.chess.screen.MainMenuScreen
 
 
 /** [com.badlogic.gdx.ApplicationListener] implementation shared by all platforms.  */
-class Chess : Game() {
+class ChessGame : Game() {
 
     private lateinit var fpsLabel: Label
 
     override fun create() {
         Vars.init()
+        Vars.game = this
 
         fpsLabel = Label("0 FPS", skin)
         fpsLabel.setPosition(10f, 20f, Align.topLeft)
 
-        setScreen(MainMenuScreen(this))
+        setScreen(MainMenuScreen())
 
         Gdx.input.inputProcessor = stage
     }
@@ -55,6 +56,7 @@ class Chess : Game() {
     }
 
     override fun dispose() {
+        super.dispose()
         stage.dispose()
         skin.dispose()
     }
