@@ -13,7 +13,6 @@ import io.github.cong.chess.Vars
 import io.github.cong.chess.Vars.game
 import io.github.cong.chess.Vars.skin
 import io.github.cong.chess.Vars.stage
-import kotlinx.coroutines.delay
 
 class MultiplayerListScreen(val rooms: List<String>) : Screen {
 
@@ -24,83 +23,87 @@ class MultiplayerListScreen(val rooms: List<String>) : Screen {
         // 设置舞台输入处理
         Gdx.input.inputProcessor = stage
 
-        table = Table()
+        Gdx.app.postRunnable {
+            table = Table()
 
-        // 居中布局
-        table.setFillParent(true)
-        table.align(Align.center)
-        stage.addActor(table)
+            // 居中布局
+            table.setFillParent(true)
+            table.align(Align.center)
+            stage.addActor(table)
 
-        // 标题
-        val titleLabel = Label("多人游戏", skin)
-        println("title")
-        table.add(titleLabel).padBottom(80f)
+            // 标题
+            val titleLabel = Label("多人游戏", skin)
+            println("title")
+            table.add(titleLabel).padBottom(80f)
 
-        println("row")
-        table.row()
+            println("row")
+            table.row()
 
-        var i = 0
+            var i = 0
 
-        println("if")
-        if (rooms.size >= 1) {
-            println("if true")
-            for (room in rooms) {
-                println("for $room")
-                // 开始按钮
-                val startButton = TextButton("房间:$room", skin)
-                startButton.addListener(object : ClickListener() {
-                    override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                        game.setScreen(MutliplayerGameScreen(room))
+            println("if")
+            if (rooms.size >= 1) {
+                println("if true")
+                for (room in rooms) {
+                    println("for $room")
+                    // 开始按钮
+                    val startButton = TextButton("房间:$room", skin)
+                    startButton.addListener(object : ClickListener() {
+                        override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                            game.setScreen(MutliplayerGameScreen(room))
+                        }
+                    })
+                    table.add(startButton).width(200f).height(50f).padBottom(20f)
+                    println("startButton")
+                    i++
+                    if (i >= 3) {
+                        println("row")
+                        table.row()
+                        i = 0
                     }
-                })
-                table.add(startButton).width(200f).height(50f).padBottom(20f)
-                println("startButton")
-                i++
-                if (i >= 3) {
-                    println("row")
-                    table.row()
-                    i = 0
                 }
+
+                if(i != 0) println("row");table.row()
             }
 
-            if(i != 0) println("row");table.row()
+            println("end")
+
+            // 新建房间
+            val newButton = TextButton("新建房间", skin)
+            newButton.addListener(object : ClickListener() {
+                override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                    val message = Net.sendBlocking("new")
+                    Thread.sleep(20)
+                    println(message)
+                    if (message!!.startsWith("createSuccess: ")) {
+                        val roomName = message.removePrefix("createSuccess: ").trim()
+                        println(roomName)
+                        game.setScreen(MutliplayerGameScreen(roomName))
+                    }
+                }
+            })
+            table.add(newButton).width(200f).height(50f).padBottom(5f).padRight(20f)
+
+            // 返回
+            val multiplayerButton = TextButton("返回", skin)
+            multiplayerButton.addListener(object : ClickListener() {
+                override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                    game.setScreen(MainMenuScreen())
+                }
+            })
+            table.add(multiplayerButton).width(200f).height(50f).padBottom(5f)
+
+            // 退出按钮
+            val exitButton = TextButton("退出游戏", skin)
+            exitButton.addListener(object : ClickListener() {
+                override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                    Net.disconnect()
+                    Vars.threadPool.shutdownNow()
+                    Gdx.app.exit()
+                }
+            })
+            table.add(exitButton).width(200f).height(50f).padBottom(5f).padLeft(20f)
         }
-
-        // 新建房间
-        val newButton = TextButton("新建房间", skin)
-        newButton.addListener(object : ClickListener() {
-            override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                val message = Net.sendBlocking("new")
-                Thread.sleep(20)
-                println(message)
-                if (message!!.startsWith("createSuccess: ")) {
-                    val roomName = message.removePrefix("createSuccess: ").trim()
-                    println(roomName)
-                    game.setScreen(MutliplayerGameScreen(roomName))
-                }
-            }
-        })
-        table.add(newButton).width(200f).height(50f).padBottom(5f).padRight(20f)
-
-        // 返回
-        val multiplayerButton = TextButton("返回", skin)
-        multiplayerButton.addListener(object : ClickListener() {
-            override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                game.setScreen(MainMenuScreen())
-            }
-        })
-        table.add(multiplayerButton).width(200f).height(50f).padBottom(5f)
-
-        // 退出按钮
-        val exitButton = TextButton("退出游戏", skin)
-        exitButton.addListener(object : ClickListener() {
-            override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                Net.disconnect()
-                Vars.threadPool.shutdownNow()
-                Gdx.app.exit()
-            }
-        })
-        table.add(exitButton).width(200f).height(50f).padBottom(5f).padLeft(20f)
     }
 
     override fun render(delta: Float) {}
