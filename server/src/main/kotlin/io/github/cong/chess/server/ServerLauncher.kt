@@ -20,7 +20,7 @@ data class Chess( val data: Array<IntArray> = Array(boardSize) { IntArray(boardS
 }
 
 fun serializeChess(chess: Chess) = chess.data.joinToString(";") { row ->
-    row.joinToString("") { it.toString() } // 去掉逗号
+    row.joinToString("") { it.toString() }
 }
 
 fun deserializeChess(str: String): Chess {

@@ -47,7 +47,7 @@ class MultiplayerListScreen(val rooms: List<String>) : Screen {
                             game.setScreen(MutliplayerGameScreen(room))
                         }
                     })
-                    table.add(startButton).width(200f).height(50f).padBottom(20f)
+                    table.add(startButton).width(300f).height(50f).padBottom(20f)
                     i++
                     if (i >= 3) {
                         table.row()

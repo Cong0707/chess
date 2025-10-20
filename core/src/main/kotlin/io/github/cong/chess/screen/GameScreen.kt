@@ -152,7 +152,6 @@ class GameScreen: Screen {
         val exitButton = TextButton("退出游戏", skin)
         exitButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent?, x: Float, y: Float) {
-                Net.disconnect()
                 game.setScreen(MainMenuScreen())
                 dialog.hide()
             }
