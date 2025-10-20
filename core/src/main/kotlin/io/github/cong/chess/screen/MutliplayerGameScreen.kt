@@ -81,6 +81,7 @@ class MutliplayerGameScreen(roomName: String) : Screen {
             if (msgs != "") {
                 showEndDialog(msgs)
                 gameOver = true
+                msgs = ""
             }
         }
 

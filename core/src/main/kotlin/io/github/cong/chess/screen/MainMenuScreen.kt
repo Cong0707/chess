@@ -1,6 +1,5 @@
 package io.github.cong.chess.screen
 
-import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.scenes.scene2d.InputEvent
@@ -11,13 +10,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import io.github.cong.chess.Net
-import io.github.cong.chess.Vars
 import io.github.cong.chess.Vars.game
 import io.github.cong.chess.Vars.preferences
 import io.github.cong.chess.Vars.skin
 import io.github.cong.chess.Vars.stage
-import io.netty.buffer.Unpooled
-import io.netty.util.CharsetUtil
 import kotlin.random.Random
 
 class MainMenuScreen : Screen {
