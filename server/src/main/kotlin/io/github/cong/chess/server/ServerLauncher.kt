@@ -134,21 +134,50 @@ class GameServerHandler : ChannelInboundHandlerAdapter() {
 
             val value = room!!.players.indexOf(playerName) + 1
 
-            println("${connection.player} place $value $row $col $playerName")
-
-            room.chess.set(row, col, value)
-            if (checkWin(room.chess, row, col, value)) {
-                response = "message: finished"
+            var count2 = 0
+            var count1 = 0
+            room.chess.data.forEach { ints ->
+                count2 += ints.filter {
+                    it == 2
+                }.size
+                count1 += ints.filter {
+                    it == 1
+                }.size
             }
-            else {
-                response = "done"
+
+            val permit = if (value == 1){
+                count2 == count1
+            } else if (value == 2) {
+                count2 < count1
+            } else {
+                false
             }
 
+            if (permit) {
+                println("${connection.player} place $value $row $col $playerName")
 
-            room.players.forEach { player ->
-                playerChannels.filter { it.value.player == player }.keys.first()
-                    .writeAndFlush(Unpooled.copiedBuffer("sync\n", CharsetUtil.UTF_8))
+                room.chess.set(row, col, value)
+                if (checkWin(room.chess, row, col, value)) {
+                    val color = when (value) {
+                        1 -> "黑"
+                        2 -> "白"
+                        else -> ""
+                    }
+                    room.players.forEach { player ->
+                        playerChannels.filter { it.value.player == player }.keys.first().apply {
+                            writeAndFlush(Unpooled.copiedBuffer("message: 游戏结束, $playerName($color)获胜\n", CharsetUtil.UTF_8))
+                            disconnect()
+                        }
+                    }
+                }
+                else {
+                    room.players.forEach { player ->
+                        playerChannels.filter { it.value.player == player }.keys.first()
+                            .writeAndFlush(Unpooled.copiedBuffer("sync\n", CharsetUtil.UTF_8))
+                    }
+                }
             }
+            response = "done"
         }
 
         println("Response: $response")

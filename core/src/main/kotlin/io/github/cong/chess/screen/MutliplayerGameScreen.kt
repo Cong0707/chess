@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.ScreenUtils
 import io.github.cong.chess.Net
+import io.github.cong.chess.Net.msgs
 import io.github.cong.chess.Net.needSync
 import io.github.cong.chess.Vars.camera
 import io.github.cong.chess.Vars.game
@@ -77,6 +78,10 @@ class MutliplayerGameScreen(roomName: String) : Screen {
         if (needSync) {
             chess = deserializeChess(Net.sendBlocking("update")!!)
             needSync = false
+            if (msgs != "") {
+                showEndDialog(msgs)
+                gameOver = true
+            }
         }
 
         camera.update()
@@ -136,10 +141,6 @@ class MutliplayerGameScreen(roomName: String) : Screen {
                 val result = Net.sendBlocking("place: $row $col")
                 if (result == "done") {
                     //will wait for sync
-                } else if (result!!.startsWith("message: ")) {
-                    val msg = result.removePrefix("message: ")
-                    showEndDialog(msg)
-                    gameOver = true
                 }
             }
         }

@@ -21,6 +21,7 @@ object Net {
     lateinit var bootstrap: Bootstrap
     lateinit var channel: Channel
     var needSync = false
+    var msgs = ""
 
     // 当前等待响应的 future（每次调用 sendBlocking 会新建一个）
     @Volatile
@@ -106,6 +107,9 @@ object Net {
                 game.setScreen(MultiplayerListScreen(rooms))
             }else if (message.startsWith("sync")) {
                 needSync = true
+            }else if (message.startsWith("message: ")) {
+                needSync = true
+                msgs = message.removePrefix("message: ")
             }else {
                 // 将收到的数据传给阻塞函数
                 handleResponse(message)
