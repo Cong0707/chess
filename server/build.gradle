@@ -1,13 +1,12 @@
 apply plugin: 'application'
 apply plugin: 'org.jetbrains.kotlin.jvm'
 
-
-java.sourceCompatibility = 21
-java.targetCompatibility = 21
+java.sourceCompatibility = 8
+java.targetCompatibility = 8
 if (JavaVersion.current().isJava9Compatible()) {
-        compileJava.options.release.set(21)
+        compileJava.options.release.set(8)
 }
-kotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+kotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
 
 mainClassName = 'io.github.cong.chess.server.ServerLauncher'
 application.setMainClass(mainClassName)
@@ -18,7 +17,7 @@ dependencies {
 }
 
 jar {
-  archiveBaseName.set(appName)
+  archiveBaseName.set(appName + '-server')
 // the duplicatesStrategy matters starting in Gradle 7.0; this setting works.
   duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
   dependsOn configurations.runtimeClasspath

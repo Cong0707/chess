@@ -53,9 +53,9 @@ object Vars {
 
         preferences = Gdx.app.getPreferences("chess-cong");
 
-        val generator = FreeTypeFontGenerator(Gdx.files.absolute("C:/Windows/Fonts/simhei.ttf"))
+        val generator = FreeTypeFontGenerator(Gdx.files.internal("simhei.ttf"))
         val sb = StringBuilder()
-        for (i in 0x4E00..0x9FA5) { // 常用汉字
+        for (i in 0x4E00..0x9FA0) { // 常用汉字
             sb.append(i.toChar())
         }
         val parameter = FreeTypeFontGenerator.FreeTypeFontParameter().apply {

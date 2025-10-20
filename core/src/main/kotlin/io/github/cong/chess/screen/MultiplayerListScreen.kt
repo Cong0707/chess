@@ -9,7 +9,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import io.github.cong.chess.Net
-import io.github.cong.chess.Vars
 import io.github.cong.chess.Vars.game
 import io.github.cong.chess.Vars.skin
 import io.github.cong.chess.Vars.stage
