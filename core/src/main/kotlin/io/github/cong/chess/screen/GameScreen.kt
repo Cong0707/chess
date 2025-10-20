@@ -131,6 +131,11 @@ class GameScreen: Screen {
                     gameOver = true
                 }
                 currentPlayer = if (currentPlayer == 1) 2 else 1
+
+                // --- 新增：AI自动下棋 ---
+                if (!gameOver && currentPlayer == 2) {
+                    computerMove()
+                }
             }
         }
     }
@@ -161,6 +166,107 @@ class GameScreen: Screen {
         dialog.show(stage)
         stage.addActor(dialog)
     }
+
+    /** 简单AI落子逻辑（不修改UI，仅补全功能） */
+    private fun computerMove() {
+        if (gameOver) return
+
+        var bestScore = Int.MIN_VALUE
+        var bestR = -1
+        var bestC = -1
+
+        for (r in 0 until boardSize) {
+            for (c in 0 until boardSize) {
+                if (board[r][c] == 0) {
+                    // 电脑下白棋
+                    board[r][c] = 2
+                    val scoreCom = evaluatePosition(r, c, 2)
+                    board[r][c] = 0
+
+                    // 模拟玩家落子，用于防守
+                    board[r][c] = 1
+                    val scoreHuman = evaluatePosition(r, c, 1)
+                    board[r][c] = 0
+
+                    val total = scoreCom + (scoreHuman * 0.8f).toInt()
+
+                    if (total > bestScore) {
+                        bestScore = total
+                        bestR = r
+                        bestC = c
+                    }
+                }
+            }
+        }
+
+        if (bestR != -1 && bestC != -1) {
+            board[bestR][bestC] = 2
+            if (checkWin(bestR, bestC, 2)) {
+                showEndDialog("电脑(白棋)胜利!")
+                gameOver = true
+            }
+            currentPlayer = 1
+        }
+    }
+
+    /** 对一个位置打分，用于AI判断 */
+    private fun evaluatePosition(r: Int, c: Int, player: Int): Int {
+        val dirs = arrayOf(
+            intArrayOf(1, 0),
+            intArrayOf(0, 1),
+            intArrayOf(1, 1),
+            intArrayOf(1, -1)
+        )
+        var score = 0
+        val opponent = if (player == 1) 2 else 1
+
+        for (dir in dirs) {
+            val line = mutableListOf<Int>()
+            for (i in -4..4) {
+                val nr = r + dir[0] * i
+                val nc = c + dir[1] * i
+                if (nr in 0 until boardSize && nc in 0 until boardSize)
+                    line.add(board[nr][nc])
+                else
+                    line.add(-1)
+            }
+            score += evaluateLine(line, player, opponent)
+        }
+        return score
+    }
+
+    /** 对一条线（9格）进行评分 */
+    private fun evaluateLine(line: List<Int>, player: Int, opponent: Int): Int {
+        val s = line.joinToString("") {
+            when (it) {
+                player -> "1"
+                opponent -> "2"
+                else -> "0"
+            }
+        }
+
+        val patterns = mapOf(
+            "11111" to 100000,
+            "011110" to 10000,
+            "011100" to 1000,
+            "001110" to 1000,
+            "011010" to 500,
+            "010110" to 500,
+            "11110" to 500,
+            "01111" to 500,
+            "001100" to 200,
+            "001010" to 150,
+            "010100" to 150,
+            "000100" to 50
+        )
+
+        var score = 0
+        for ((pat, val_) in patterns) {
+            if (s.contains(pat)) score += val_
+        }
+        return score
+    }
+
 
     private fun checkWin(row: Int, col: Int, player: Int): Boolean {
         val dirs = arrayOf(
